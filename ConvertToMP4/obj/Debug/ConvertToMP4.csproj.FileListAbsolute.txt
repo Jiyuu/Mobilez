@@ -1,0 +1,6 @@
+I:\My Documents\Visual Studio 2012\Projects\ConvertToMP4\ConvertToMP4\bin\Debug\ConvertToMP4.exe.config
+I:\My Documents\Visual Studio 2012\Projects\ConvertToMP4\ConvertToMP4\obj\Debug\ConvertToMP4.csprojResolveAssemblyReference.cache
+I:\My Documents\Visual Studio 2012\Projects\ConvertToMP4\ConvertToMP4\bin\Debug\ConvertToMP4.exe
+I:\My Documents\Visual Studio 2012\Projects\ConvertToMP4\ConvertToMP4\bin\Debug\ConvertToMP4.pdb
+I:\My Documents\Visual Studio 2012\Projects\ConvertToMP4\ConvertToMP4\obj\Debug\ConvertToMP4.exe
+I:\My Documents\Visual Studio 2012\Projects\ConvertToMP4\ConvertToMP4\obj\Debug\ConvertToMP4.pdb
