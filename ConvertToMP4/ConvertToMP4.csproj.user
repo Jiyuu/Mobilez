@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <StartArguments>"G:\Vuze\[Anime-Takeover] Mahou Tsukai Tai OAV\[anime-takeover]_magic_users_club_oav_ep01_[f7bd877d].ogm"</StartArguments>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <StartArguments>"G:\usenet\ITA\3\[Doki]_GJ-bu_-_01_%28848x480_h264_BD_AAC%29_[2DD92ADE].mkv"</StartArguments>
-  </PropertyGroup>
-</Project>

@@ -16,7 +16,7 @@ namespace ConvertToMP4
             string tmp;
             //string command = "-i \"{0}\" -s 740x416 -c:v libx264 -crf:v 26 -preset:v medium -ac 1 -c:a aac -strict -2 -cutoff 15000 -b:a 64k \"{1}\"";
             string command = "-i \"{0}\" -s 740x416 -c:v libx264 -crf:v 26 -preset:v medium -ac 1 -c:a aac -strict -2 -cutoff 15000 -b:a 64k \"{1}\"";
-            command = "-y -i \"{0}\" -s 640x360 -c:v libx264 -crf:v 26 -preset:v veryfast -ac 1 -c:a libfdk_aac -b:a 64k -strict -2 -cutoff 15000 -vf \"ass='{2}'\" \"{1}\"";
+            command = "-y -i \"{0}\" -s {4} -map 0:v -map 0:{3} -c:v libx264 -crf:v 26 -preset:v veryfast -ac 1 -c:a libfdk_aac -b:a 64k -strict -2 -cutoff 15000 -vf \"ass='{2}'\" \"{1}\"";
             List<string> cleanup = new List<string>();
 
             foreach (var item in args)
@@ -84,12 +84,12 @@ namespace ConvertToMP4
                 Match[] a = new Match[resultCollection.Count];
                 resultCollection.CopyTo(a, 0);
 
-                string audioStream = "a";
+                string audioTrack = "a";
                 if (a.Count(g => g.Groups["Type"].Value == "Audio") > 1)
                 {
                     var audioResult = a.Where(g => g.Groups["Type"].Value == "Audio").FirstOrDefault(g => g.Value.Contains("jpn") || g.Value.Contains("Japanese"));
                     if (audioResult != null)
-                        audioStream = audioResult.Groups["TrackID"].Value;
+                        audioTrack = audioResult.Groups["TrackID"].Value;
                 }
                 bool hasSubs = false;
 
@@ -114,7 +114,23 @@ namespace ConvertToMP4
                     }
                 }
 
+                var videoStream =a.First(g => g.Groups["Type"].Value == "Video");
+                r = new Regex("([^,]+,)+\\s(?<Height>[0-9]+)x(?<Width>[0-9]+)");
+                result = r.Match(videoStream.Value);
+                int width = int.Parse(result.Groups["Height"].Value);
+                int height = int.Parse(result.Groups["Width"].Value);
+                double aspectRation =(double) width / (double)height;
 
+                int targetWidth = 640;
+                int targetHeight = 360;
+                targetHeight =((int) (320 / aspectRation) )* 2;
+                if (targetHeight > 360)
+                {
+                    targetHeight = 360;
+                    targetWidth = ((int)((180) * aspectRation)) * 2;
+                }
+
+                string targetSize = targetWidth.ToString() + "x" + targetHeight.ToString();
 
                 //ExecuteAndReturn("mkvextract", string.Format("tracks \"{0}\" {1}:\"{2}\"", item, SubtitleTrack.ToString(), subtitlefile));
                 subtitlefile = subtitlefile.Replace("\\", "\\\\").Replace(":", "\\:");
@@ -123,9 +139,9 @@ namespace ConvertToMP4
 
                 var process = new System.Diagnostics.Process();
 
-                Console.WriteLine(string.Format(command, item, filename, subtitlefile));
+                Console.WriteLine(string.Format(command, item, filename, subtitlefile, audioTrack, targetSize));
 
-                process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(command, item, filename, subtitlefile));
+                process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(command, item, filename, subtitlefile, audioTrack, targetSize));
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.UseShellExecute = false;
                 //process.OutputDataReceived += process_OutputDataReceived;
