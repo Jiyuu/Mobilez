@@ -16,7 +16,10 @@ namespace ConvertToMP4
             string tmp;
             //string command = "-i \"{0}\" -s 740x416 -c:v libx264 -crf:v 26 -preset:v medium -ac 1 -c:a aac -strict -2 -cutoff 15000 -b:a 64k \"{1}\"";
             string command = "-i \"{0}\" -s 740x416 -c:v libx264 -crf:v 26 -preset:v medium -ac 1 -c:a aac -strict -2 -cutoff 15000 -b:a 64k \"{1}\"";
+            
             command = "-y -i \"{0}\" -s {4} -map 0:v -map 0:{3} -c:v libx264 -crf:v 26 -preset:v veryfast -ac 1 -c:a libfdk_aac -b:a 64k -strict -2 -cutoff 15000 -vf \"ass='{2}'\" \"{1}\"";
+
+            string commandnoSubs = "-y -i \"{0}\" -s {3} -map 0:v -map 0:{2} -c:v libx264 -crf:v 26 -preset:v veryfast -ac 1 -c:a libfdk_aac -b:a 64k -strict -2 -cutoff 15000 \"{1}\"";
             List<string> cleanup = new List<string>();
 
             foreach (var item in args)
@@ -109,7 +112,7 @@ namespace ConvertToMP4
                     {
                         cleanup.Add(dir + "\\" + f);
                         if (!File.Exists("C:\\tools\\ffmpeg\\fonts\\" + f))
-                            File.Copy(dir+"\\"+f, "C:\\tools\\ffmpeg\\fonts\\" + f);
+                            File.Copy(dir + "\\" + f, "C:\\tools\\ffmpeg\\fonts\\" + f);
 
                     }
                 }
@@ -133,7 +136,7 @@ namespace ConvertToMP4
                 string targetSize = targetWidth.ToString() + "x" + targetHeight.ToString();
 
                 //ExecuteAndReturn("mkvextract", string.Format("tracks \"{0}\" {1}:\"{2}\"", item, SubtitleTrack.ToString(), subtitlefile));
-                subtitlefile = subtitlefile.Replace("\\", "\\\\").Replace(":", "\\:");
+                subtitlefile = subtitlefile.Replace("\\", "\\\\").Replace(":", "\\:").Replace("'","\\'\\'\\'");
 
 
 
@@ -141,7 +144,10 @@ namespace ConvertToMP4
 
                 Console.WriteLine(string.Format(command, item, filename, subtitlefile, audioTrack, targetSize));
 
+                if (hasSubs)
                 process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(command, item, filename, subtitlefile, audioTrack, targetSize));
+                else
+                    process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(commandnoSubs, item, filename, audioTrack, targetSize));
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.UseShellExecute = false;
                 //process.OutputDataReceived += process_OutputDataReceived;
