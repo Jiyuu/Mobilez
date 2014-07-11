@@ -16,7 +16,9 @@ namespace ConvertToMP4
             string tmp;
             //string command = "-i \"{0}\" -s 740x416 -c:v libx264 -crf:v 26 -preset:v medium -ac 1 -c:a aac -strict -2 -cutoff 15000 -b:a 64k \"{1}\"";
             string command = "-i \"{0}\" -s 740x416 -c:v libx264 -crf:v 26 -preset:v medium -ac 1 -c:a aac -strict -2 -cutoff 15000 -b:a 64k \"{1}\"";
-            
+
+            command = "-y -i \"{0}\" -map 0:v -map 0:{3} -c:v libx264 -crf:v 21 -preset:v fast -ac 1 -c:a copy -vf \"ass='{2}'\" \"{1}\""; //no resizing for mobile, just hardsubbing
+
             command = "-y -i \"{0}\" -s {4} -map 0:v -map 0:{3} -c:v libx264 -crf:v 26 -preset:v veryfast -ac 1 -c:a libfdk_aac -b:a 64k -strict -2 -cutoff 15000 -vf \"ass='{2}'\" \"{1}\"";
 
             string commandnoSubs = "-y -i \"{0}\" -s {3} -map 0:v -map 0:{2} -c:v libx264 -crf:v 26 -preset:v veryfast -ac 1 -c:a libfdk_aac -b:a 64k -strict -2 -cutoff 15000 \"{1}\"";
@@ -26,6 +28,8 @@ namespace ConvertToMP4
             {
                 FileInfo fileinfo = new FileInfo(item);
                 var dir = Path.GetDirectoryName(item);
+                if (dir == "")
+                    dir = ".";
                 List<string> fileParts = item.Split('.').ToList();
                 string filename = "";
                 fileParts.Insert(fileParts.Count - 1, "MOBILE");
@@ -36,8 +40,8 @@ namespace ConvertToMP4
                 //string mkvmergeOutput = ExecuteAndReturn("mkvmerge", "--identify \"" + item + "\"");
 
                 //string[] mkvmergeLines = mkvmergeOutput.Split(new string[]{System.Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
-                int SubtitleTrack = -1;
-                string subFormat = "";
+                //int SubtitleTrack = -1;
+                //string subFormat = "";
 
 
                 string subtitlefile = filename + ".ass";
@@ -97,7 +101,14 @@ namespace ConvertToMP4
                 bool hasSubs = false;
 
                 var subtitleResult = a.FirstOrDefault(g => g.Groups["Type"].Value == "Subtitle");
-                if (subtitleResult != null)
+                if (File.Exists(item+".ass"))
+                {
+                    hasSubs = true;
+
+                    subtitlefile = item + ".ass";
+
+                }
+                else if (subtitleResult != null)
                 {
                     ExecuteAndReturn("ffmpeg", string.Format("-i \"{0}\" -y  -vn -an -codec:s:0.{1} ssa  \"{2}\"", item, subtitleResult.Groups["TrackID"].Value, subtitlefile));//-codec:s:0.{1}
                     hasSubs = true;
@@ -111,8 +122,8 @@ namespace ConvertToMP4
                     foreach (var f in a.Where(g => g.Groups["Type"].Value == "Attachment").Select(g => g.Groups["FileName"].Value))
                     {
                         cleanup.Add(dir + "\\" + f);
-                        if (!File.Exists("C:\\tools\\ffmpeg\\fonts\\" + f))
-                            File.Copy(dir + "\\" + f, "C:\\tools\\ffmpeg\\fonts\\" + f);
+                        if (!File.Exists("C:\\Applications\\ffmpeg\\fonts\\" + f))
+                            File.Copy(dir + "\\" + f, "C:\\Applications\\ffmpeg\\fonts\\" + f);
 
                     }
                 }
@@ -145,7 +156,7 @@ namespace ConvertToMP4
                 Console.WriteLine(string.Format(command, item, filename, subtitlefile, audioTrack, targetSize));
 
                 if (hasSubs)
-                process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(command, item, filename, subtitlefile, audioTrack, targetSize));
+                    process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(command, item, filename, subtitlefile, audioTrack, targetSize));
                 else
                     process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(commandnoSubs, item, filename, audioTrack, targetSize));
                 process.StartInfo.RedirectStandardOutput = true;
