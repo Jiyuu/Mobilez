@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ConvertToMP4.Properties;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,13 +14,22 @@ namespace ConvertToMP4
     {
         static void Main(string[] args)
         {
+            //System.Diagnostics.Debugger.Break();
+            //try
+            //{
+            //    Environment.SetEnvironmentVariable("FC_CONFIG_DIR", ".\\", EnvironmentVariableTarget.Machine);
+            //    Environment.SetEnvironmentVariable("FC_CONFIG_FILE", ".\\fonts.conf", EnvironmentVariableTarget.Machine);
+            //}
+            //catch
+            //{ }
             string tmp;
             //string command = "-i \"{0}\" -s 740x416 -c:v libx264 -crf:v 26 -preset:v medium -ac 1 -c:a aac -strict -2 -cutoff 15000 -b:a 64k \"{1}\"";
             string command = "-i \"{0}\" -s 740x416 -c:v libx264 -crf:v 26 -preset:v medium -ac 1 -c:a aac -strict -2 -cutoff 15000 -b:a 64k \"{1}\"";
 
-            command = "-y -i \"{0}\" -map 0:v -map 0:{3} -c:v libx264 -crf:v 21 -preset:v fast -ac 1 -c:a copy -vf \"ass='{2}'\" \"{1}\""; //no resizing for mobile, just hardsubbing
+            command = "-y -i \"{0}\" -map 0:v -map 0:{3} -loglevel verbose -c:v libx264 -crf:v 21 -preset:v fast -ac 1 -c:a copy -vf \"ass='{2}'\" \"{1}\""; //no resizing for mobile, just hardsubbing
 
             command = "-y -i \"{0}\" -s {4} -map 0:v -map 0:{3} -c:v libx264 -crf:v 26 -preset:v veryfast -ac 1 -c:a libfdk_aac -b:a 64k -strict -2 -cutoff 15000 -vf \"ass='{2}'\" \"{1}\"";
+
 
             string commandnoSubs = "-y -i \"{0}\" -s {3} -map 0:v -map 0:{2} -c:v libx264 -crf:v 26 -preset:v veryfast -ac 1 -c:a libfdk_aac -b:a 64k -strict -2 -cutoff 15000 \"{1}\"";
             List<string> cleanup = new List<string>();
@@ -122,13 +132,18 @@ namespace ConvertToMP4
                     foreach (var f in a.Where(g => g.Groups["Type"].Value == "Attachment").Select(g => g.Groups["FileName"].Value))
                     {
                         cleanup.Add(dir + "\\" + f);
-                        if (!File.Exists("C:\\Applications\\ffmpeg\\fonts\\" + f))
-                            File.Copy(dir + "\\" + f, "C:\\Applications\\ffmpeg\\fonts\\" + f);
+                        if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + Settings.Default.FontPath + f))
+                        {
+                            if (!Directory.Exists(AppDomain.CurrentDomain.BaseDirectory+Settings.Default.FontPath))
+                                Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + Settings.Default.FontPath);
+                            File.Copy(dir + "\\" + f, AppDomain.CurrentDomain.BaseDirectory + Settings.Default.FontPath + f);
+                        }
+
 
                     }
                 }
 
-                var videoStream =a.First(g => g.Groups["Type"].Value == "Video");
+                    var videoStream =a.First(g => g.Groups["Type"].Value == "Video");
                 r = new Regex("([^,]+,)+\\s(?<Height>[0-9]+)x(?<Width>[0-9]+)");
                 result = r.Match(videoStream.Value);
                 int width = int.Parse(result.Groups["Height"].Value);
@@ -152,13 +167,21 @@ namespace ConvertToMP4
 
 
                 var process = new System.Diagnostics.Process();
-
+                
                 Console.WriteLine(string.Format(command, item, filename, subtitlefile, audioTrack, targetSize));
 
                 if (hasSubs)
                     process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(command, item, filename, subtitlefile, audioTrack, targetSize));
                 else
                     process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(commandnoSubs, item, filename, audioTrack, targetSize));
+
+
+                //Environment.SetEnvironmentVariable("FC_CONFIG_DIR", ".\\", EnvironmentVariableTarget.Machine);
+                //Environment.SetEnvironmentVariable("FC_CONFIG_FILE", ".\\fonts.conf", EnvironmentVariableTarget.Machine);
+                process.StartInfo.EnvironmentVariables["FC_CONFIG_DIR"] = ".\\";
+                process.StartInfo.EnvironmentVariables["FC_CONFIG_FILE"] = ".\\fonts.conf";
+                process.StartInfo.WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.UseShellExecute = false;
                 //process.OutputDataReceived += process_OutputDataReceived;
