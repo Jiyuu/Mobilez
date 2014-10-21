@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
+//using System.Threading.Tasks;
 
 namespace ConvertToMP4
 {
@@ -24,9 +24,9 @@ namespace ConvertToMP4
             //{ }
             string tmp;
             //string command = "-i \"{0}\" -s 740x416 -c:v libx264 -crf:v 26 -preset:v medium -ac 1 -c:a aac -strict -2 -cutoff 15000 -b:a 64k \"{1}\"";
-            string command = "-i \"{0}\" -s 740x416 -c:v libx264 -crf:v 26 -preset:v medium -ac 1 -c:a aac -strict -2 -cutoff 15000 -b:a 64k \"{1}\"";
+            string command = "-i \"{0}\" -s 740x416 -c:v libx264 -crf:v 26 -preset:v veryfast -ac 1 -c:a aac -strict -2 -cutoff 15000 -b:a 64k \"{1}\"";
 
-            command = "-y -i \"{0}\" -map 0:v -map 0:{3} -loglevel verbose -c:v libx264 -crf:v 21 -preset:v fast -ac 1 -c:a copy -vf \"ass='{2}'\" \"{1}\""; //no resizing for mobile, just hardsubbing
+            //command = "-y -i \"{0}\" -map 0:v -map 0:{3} -loglevel verbose -c:v libx264 -crf:v 21 -preset:v fast -ac 1 -c:a copy -vf \"ass='{2}'\" \"{1}\""; //no resizing for mobile, just hardsubbing
 
             command = "-y -i \"{0}\" -s {4} -map 0:v -map 0:{3} -c:v libx264 -crf:v 26 -preset:v veryfast -ac 1 -c:a libfdk_aac -b:a 64k -strict -2 -cutoff 15000 -vf \"ass='{2}'\" \"{1}\"";
 
