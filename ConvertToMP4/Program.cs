@@ -1,4 +1,5 @@
-﻿using ConvertToMP4.Properties;
+﻿using CommandLine;
+using ConvertToMP4.Properties;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,10 +11,29 @@ using System.Threading;
 
 namespace ConvertToMP4
 {
+    class Options
+    {
+        [Option('r', "resolution", Required = false, DefaultValue = "640x360",
+        HelpText = "Target resolution")]
+        public string Resolution{get;set;}
+        
+        [OptionArray('o', "output",Required=false, HelpText = "The output files to generate.",DefaultValue=new string[]{})]
+        public string[] OutputFiles { get; set; }
+    
+        [ValueList(typeof(List<string>))]
+        public List<string> InputFiles { get; set; }
+    }
     class Program
     {
         static void Main(string[] args)
         {
+
+            var options = new Options();
+            if (!CommandLine.Parser.Default.ParseArguments(args, options))
+            {
+                throw new Exception("Couldn't parse settings");
+            }
+
             //System.Diagnostics.Debugger.Break();
             //try
             //{
@@ -33,8 +53,8 @@ namespace ConvertToMP4
 
             string commandnoSubs = "-y -i \"{0}\" -s {3} -map 0:v -map 0:{2} -c:v libx264 -crf:v 26 -preset:v veryfast -ac 1 -c:a libfdk_aac -b:a 64k -strict -2 -cutoff 15000 \"{1}\"";
             List<string> cleanup = new List<string>();
-
-            foreach (var item in args)
+            int count = 0;
+            foreach (var item in options.InputFiles)
             {
                 FileInfo fileinfo = new FileInfo(item);
                 var dir = Path.GetDirectoryName(item);
@@ -55,6 +75,13 @@ namespace ConvertToMP4
 
 
                 string subtitlefile = filename + ".ass";
+
+                string outputFileName = filename;
+
+                if (options.OutputFiles.Length >= count + 1)
+                {
+                    outputFileName = options.OutputFiles[count];
+                }
 
                 //foreach (var line in mkvmergeLines)
                 //{
@@ -150,13 +177,16 @@ namespace ConvertToMP4
                 int height = int.Parse(result.Groups["Width"].Value);
                 double aspectRation =(double) width / (double)height;
 
-                int targetWidth = 640;
-                int targetHeight = 360;
-                targetHeight =((int) (320 / aspectRation) )* 2;
-                if (targetHeight > 360)
+                int requestedWidth = int.Parse(options.Resolution.Split('x')[0]);
+                int requestedHeight = int.Parse(options.Resolution.Split('x')[1]);
+
+                int targetWidth = requestedWidth;
+                int targetHeight = requestedHeight;
+                targetHeight = ((int)(requestedWidth / aspectRation));
+                if (targetHeight > requestedHeight)
                 {
-                    targetHeight = 360;
-                    targetWidth = ((int)((180) * aspectRation)) * 2;
+                    targetHeight = requestedHeight;
+                    targetWidth = ((int)((requestedHeight) * aspectRation)) ;
                 }
 
                 string targetSize = targetWidth.ToString() + "x" + targetHeight.ToString();
@@ -167,13 +197,13 @@ namespace ConvertToMP4
 
 
                 var process = new System.Diagnostics.Process();
-                
-                Console.WriteLine(string.Format(command, item, filename, subtitlefile, audioTrack, targetSize));
+
+                Console.WriteLine(string.Format(command, item, outputFileName, subtitlefile, audioTrack, targetSize));
 
                 if (hasSubs)
-                    process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(command, item, filename, subtitlefile, audioTrack, targetSize));
+                    process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(command, item, outputFileName, subtitlefile, audioTrack, targetSize));
                 else
-                    process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(commandnoSubs, item, filename, audioTrack, targetSize));
+                    process.StartInfo = new System.Diagnostics.ProcessStartInfo("ffmpeg", string.Format(commandnoSubs, item, outputFileName, audioTrack, targetSize));
 
 
                 //Environment.SetEnvironmentVariable("FC_CONFIG_DIR", ".\\", EnvironmentVariableTarget.Machine);
@@ -196,9 +226,10 @@ namespace ConvertToMP4
 
 
                 process.WaitForExit();
+                count++;
             }
 
-            Console.Read();
+            //Console.Read();
             foreach (var record in cleanup.Distinct())
             {
                 File.Delete(record);
